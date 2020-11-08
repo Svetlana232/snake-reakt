@@ -2,14 +2,18 @@ import React, { Component } from 'react';
 import Snake from './Snake';
 import Food from './Food';
 
+function getRandom(max, min) {
+  return Math.floor((Math.random() * (max - min * 1) * min) / 2) * 2;
+  };
+
 const getRandomCoordinates = () => {
-  let min = 1;
-  let max = 98;
-  let x = Math.floor((Math.random()*(max - min +1)+min) / 2) * 2;
-  let y = Math.floor((Math.random()*(max - min +1)+min) / 2) * 2;
-  let position = [x, y];
+  const min = 1;
+  const max = 98;
+  const x = getRandom(max, min);
+  const y = getRandom(max, min);
+  const position = [x, y];
   return position;
-}
+};
 
 const initialState = {
   food: getRandomCoordinates(),
@@ -26,13 +30,15 @@ class App extends Component {
 
   componentDidMount() {
     setInterval(this.moveSnake, this.state.speed);
-    document.onkeydown = this.onKeyPressed;
+    document.addEventListener("keydown", this.onKeyPressed);
+  }
+
+  componentWillUnmount () {
+    document.removeEventListener("keydown", this.onKeyPressed);
   }
 
   componentDidUpdate() {
-    this.checkIfOutOfBorders();
-    this.checkIfCollapsed();
-    this.checkIfEat();
+    
   }
 
   onKeyPressed = (e) => {
@@ -56,19 +62,20 @@ class App extends Component {
   moveSnake = () => {
     let dots = [...this.state.snakeDots];
     let head = dots[dots.length - 1];
+    const [x, y] = head;
 
     switch (this.state.direction) {
       case "RIGHT":
-        head = [head[0] + 2, head[1]];
+        head = [x + 2, y];
         break;
       case "LEFT":
-        head = [head[0] - 2, head[1]];
+        head = [x - 2, y];
         break;
       case "DOWN":
-        head = [head[0], head[1] + 2];
+        head = [x, y + 2];
         break;
       case 'UP':
-        head = [head[0], head[1] - 2];
+        head = [x, y - 2];
         break;
       default: 
          head = dots[dots.length - 1];  	
@@ -79,17 +86,20 @@ class App extends Component {
     this.setState({
       snakeDots: dots
     });
+    this.checkIfOutOfBorders(dots);
+    this.checkIfCollapsed(dots);
+    this.checkIfEat(dots);
   }
 
-  checkIfOutOfBorders() {
-    let head = this.state.snakeDots[this.state.snakeDots.length - 1];
+  checkIfOutOfBorders(snakeDots) {
+    let head = snakeDots[snakeDots.length - 1];
     if (head[0] >= 100 || head[1] >= 100 || head[0] < 0 || head[1] <0) {
       this.onGameOver();
     }
   }
 
-  checkIfCollapsed() {
-    let snake = [...this.state.snakeDots];
+  checkIfCollapsed(snakeDots) {
+    let snake = [...snakeDots];
     let head = snake[snake.length - 1];
     snake.pop();
     snake.forEach(dot => {
@@ -99,8 +109,8 @@ class App extends Component {
     });
   }
 
-  checkIfEat() {
-    let head = this.state.snakeDots[this.state.snakeDots.length - 1];
+  checkIfEat(snakeDots) {
+    let head = snakeDots[snakeDots.length - 1];
     let food = this.state.food;
     if (head[0] === food[0] && head[1] === food[1]) {
       this.setState({
@@ -122,7 +132,7 @@ class App extends Component {
   increaseSpeed() {
     if (this.state.speed > 10) {
       this.setState({
-        speed: this.state.speed - 10
+        speed: this.state.speed * 0.95,
       });
     }
   }
